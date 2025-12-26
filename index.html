@@ -110,7 +110,7 @@
             `;
 
             try {
-                // Call our own Vercel Backend
+              // Call our own Vercel Backend
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -119,14 +119,13 @@
 
                 const json = await response.json();
                 
+                // Error Handling
                 if (json.error) throw new Error(json.error.message || json.error);
-                if (!json.candidates) throw new Error("AI returned no data. Try again.");
+                
+                // Validation: Ensure we actually got a result back
+                if (!json.result) throw new Error("AI returned empty data. The model might be cold. Please click retry.");
 
-                const json = await response.json();
-                
-                if (json.error) throw new Error(json.error.message || json.error);
-                
-                // The backend now returns { result: "..." }
+                // The backend now returns { result: "..." } so we extract it here
                 const text = json.result;
             }
         }
