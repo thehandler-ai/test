@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE HANDLER // V1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #00FF94; }
+        .glass { background: rgba(0, 20, 0, 0.6); backdrop-filter: blur(10px); border: 1px solid #00FF94; }
+        .scanline {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 148, 0.02) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 50;
+        }
+        ::placeholder { color: #005533; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-x-hidden">
+    
+    <div class="scanline"></div>
+
+    <header class="mb-8 text-center z-10">
+        <h1 class="text-5xl font-bold tracking-tighter drop-shadow-[0_0_10px_rgba(0,255,148,0.8)]">THE HANDLER</h1>
+        <p class="text-xs tracking-[0.5em] text-gray-500 mt-2">SOCIAL_STRATEGY_ENGINE // V1.0</p>
+    </header>
+
+    <main class="w-full max-w-2xl z-10 space-y-6">
+
+        <!-- STEP 1: SELECTOR -->
+        <div id="step1" class="space-y-4">
+            <p class="text-sm text-gray-400 border-b border-gray-800 pb-2">[ SELECT_OPERATOR_MODE ]</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="selectArchetype('Ghost')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
+                    <div class="text-2xl mb-2">👻</div>
+                    <div class="font-bold group-hover:text-white">THE GHOST</div>
+                </button>
+                <button onclick="selectArchetype('Siren')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
+                    <div class="text-2xl mb-2">🥺</div>
+                    <div class="font-bold group-hover:text-white">THE SIREN</div>
+                </button>
+                <button onclick="selectArchetype('Sovereign')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
+                    <div class="text-2xl mb-2">♟️</div>
+                    <div class="font-bold group-hover:text-white">THE SOVEREIGN</div>
+                </button>
+                <button onclick="selectArchetype('Yapper')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
+                    <div class="text-2xl mb-2">🗣️</div>
+                    <div class="font-bold group-hover:text-white">THE YAPPER</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 2: INPUT -->
+        <div id="step2" class="hidden space-y-4 glass p-6">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <p class="text-sm text-gray-400">[ UPLOAD_DATA ]</p>
+                <span id="selectedMode" class="text-xs bg-green-900 text-green-100 px-2 py-1 rounded">MODE: NULL</span>
+            </div>
+            <textarea id="userInput" class="w-full bg-black/50 border border-gray-700 text-white p-4 h-32 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Paste the text message here..."></textarea>
+            <button onclick="runAnalysis()" id="analyzeBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold py-3 uppercase tracking-widest transition">
+                INITIATE ANALYSIS
+            </button>
+        </div>
+
+        <!-- STEP 3: OUTPUT -->
+        <div id="step3" class="hidden space-y-4">
+            <div class="glass p-6 border-l-4 border-l-green-500">
+                <h3 class="text-xl font-bold mb-4 border-b border-gray-800 pb-2">:: ANALYSIS REPORT ::</h3>
+                <div id="results" class="space-y-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+            <button onclick="location.reload()" class="text-xs text-gray-500 hover:text-white underline">[ RESET_SYSTEM ]</button>
+        </div>
+
+    </main>
+<script>
+        let currentArchetype = "";
+
+        function selectArchetype(type) {
+            console.log("Archetype Selected:", type);
+            currentArchetype = type;
+            document.getElementById('selectedMode').innerText = "MODE: " + type.toUpperCase();
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        async function runAnalysis() {
+            const input = document.getElementById('userInput').value;
+            const btn = document.getElementById('analyzeBtn');
+            const resultDiv = document.getElementById('results');
+            
+            if (!input) return alert("NO DATA DETECTED.");
+
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+
+            const prompt = `
+            You are 'The Handler', a Machiavellian social strategist.
+            My Archetype is: ${currentArchetype}.
+            Analyze this text/situation: "${input}"
+            
+            Output format (Strict text only, no markdown symbols):
+            
+            POWER: [Who is winning %]
+            INTENT: [Hidden meaning]
+            
+            STRATEGIC REPLY (In ${currentArchetype} style):
+            "[Write the perfect reply here]"
+            `;
+
+            try {
+                // Call our own Vercel Backend
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const json = await response.json();
+                
+                if (json.error) throw new Error(json.error.message || json.error);
+                if (!json.candidates) throw new Error("AI returned no data. Try again.");
+
+                const text = json.candidates[0].content.parts[0].text;
+                
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                resultDiv.innerText = text;
+                
+                btn.innerText = "INITIATE ANALYSIS";
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("SYSTEM FAILURE: " + error.message);
+                btn.innerText = "RETRY";
+                btn.disabled = false;
+            }
+        }
+    </script>
+   
+</body>
+</html>
