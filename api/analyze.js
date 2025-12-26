@@ -29,7 +29,9 @@ export default async function handler(req) {
         "${text}"
 
         GOAL:
-        Analyze the power dynamics and provide 3 specific reply options to help "${identity}" WIN the interaction.
+        1. Analyze the power dynamics.
+        2. Draft 3 specific text messages that "${identity}" should send next. 
+        CRITICAL: You must write these messages AS "${identity}". Do NOT write what the other person should say. Even if "${identity}" sent the last message, draft a follow-up or a double-text strategy.
 
         ARCHETYPE GUIDELINES:
         - Ghost: Stoic, short, aloof, lower case.
@@ -38,13 +40,13 @@ export default async function handler(req) {
         - Yapper: Chaotic, high energy, enthusiastic.
 
         OUTPUT FORMAT (Strict, no markdown bolding):
-        POWER: [Score 0-100%]
-        INTENT: [What the other person actually means]
+        POWER: [Score 0-100% for ${identity}]
+        INTENT: [What the other person actually means / The hidden subtext of the situation]
         
-        REPLY OPTIONS:
-        1. [Option A - Safe]
-        2. [Option B - Risky]
-        3. [Option C - Nuclear]
+        REPLY OPTIONS (Drafted for ${identity} to send):
+        1. [Option A]
+        2. [Option B]
+        3. [Option C]
         `;
 
         const url = 'https://api.groq.com/openai/v1/chat/completions';
