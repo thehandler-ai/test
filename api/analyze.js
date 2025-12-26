@@ -1,3 +1,6 @@
+export const config = {
+    runtime: 'edge', // Groq is fast enough for Edge
+};
 
 export default async function handler(req) {
     if (req.method !== 'POST') {
@@ -6,40 +9,42 @@ export default async function handler(req) {
 
     try {
         const { prompt } = await req.json();
-        const apiKey = process.env.BYTEZ_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
 
         if (!apiKey) {
-            return new Response(JSON.stringify({ error: "Server Error: Bytez Key Missing" }), { status: 500 });
+            return new Response(JSON.stringify({ error: "Server Error: Groq Key Missing" }), { status: 500 });
         }
 
-        // We use a high-performance open model. 
-        // Qwen 2.5 7B Instruct is excellent for logic and follows instructions well.
-        const modelId = "Qwen/Qwen2.5-7B-Instruct";
+        // Groq API Endpoint (OpenAI Compatible)
+        const url = 'https://api.groq.com/openai/v1/chat/completions';
 
-        const response = await fetch(`https://api.bytez.com/model/${modelId}`, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                text: prompt,
-                params: {
-                    max_new_tokens: 600, // Enough for a detailed analysis
-                    temperature: 0.7
-                }
+                model: "llama3-70b-8192", // S-Tier Intelligence, Instant Speed
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 800
             })
         });
 
         const json = await response.json();
 
-        // Bytez returns { output: "The text..." }
-        // We normalize it here so the frontend is happy
-        if (!json.output) {
-             throw new Error(JSON.stringify(json));
+        // Error handling from Groq
+        if (json.error) {
+             throw new Error(json.error.message);
         }
 
-        return new Response(JSON.stringify({ result: json.output }), {
+        // Extract the text
+        const text = json.choices[0].message.content;
+
+        return new Response(JSON.stringify({ result: text }), {
             headers: { 'Content-Type': 'application/json' }
         });
 
