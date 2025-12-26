@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE HANDLER // V1.1</title>
+    <title>THE HANDLER // V1.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -24,7 +24,7 @@
 
     <header class="mb-8 text-center z-10">
         <h1 class="text-5xl font-bold tracking-tighter drop-shadow-[0_0_10px_rgba(0,255,148,0.8)]">THE HANDLER</h1>
-        <p class="text-xs tracking-[0.5em] text-gray-500 mt-2">SOCIAL_STRATEGY_ENGINE // V1.0</p>
+        <p class="text-xs tracking-[0.5em] text-gray-500 mt-2">SOCIAL_STRATEGY_ENGINE // V1.2</p>
     </header>
 
     <main class="w-full max-w-2xl z-10 space-y-6">
@@ -58,7 +58,7 @@
                 <p class="text-sm text-gray-400">[ UPLOAD_DATA ]</p>
                 <span id="selectedMode" class="text-xs bg-green-900 text-green-100 px-2 py-1 rounded">MODE: NULL</span>
             </div>
-            <textarea id="userInput" class="w-full bg-black/50 border border-gray-700 text-white p-4 h-32 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Paste the text message here..."></textarea>
+            <textarea id="userInput" class="w-full bg-black/50 border border-gray-700 text-white p-4 h-32 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Paste the text message or describe the situation..."></textarea>
             <button onclick="runAnalysis()" id="analyzeBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold py-3 uppercase tracking-widest transition">
                 INITIATE ANALYSIS
             </button>
@@ -74,14 +74,17 @@
         </div>
 
     </main>
-<script>
+
+    <script>
         let currentArchetype = "";
 
         function selectArchetype(type) {
             console.log("Archetype Selected:", type);
             currentArchetype = type;
             document.getElementById('selectedMode').innerText = "MODE: " + type.toUpperCase();
-            document.getElementById('step1').classList.add('hidden');
+            // Using style display to ensure compatibility
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
             document.getElementById('step2').classList.remove('hidden');
         }
 
@@ -103,14 +106,14 @@
             Output format (Strict text only, no markdown symbols):
             
             POWER: [Who is winning %]
-            INTENT: [Hidden meaning]
+            INTENT: [What they actually mean]
             
             STRATEGIC REPLY (In ${currentArchetype} style):
             "[Write the perfect reply here]"
             `;
 
             try {
-              // Call our own Vercel Backend
+                // Call our own Vercel Backend
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -127,9 +130,22 @@
 
                 // The backend now returns { result: "..." } so we extract it here
                 const text = json.result;
+                
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+                document.getElementById('step3').classList.remove('hidden');
+                resultDiv.innerText = text;
+                
+                btn.innerText = "INITIATE ANALYSIS";
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("SYSTEM FAILURE: " + error.message);
+                btn.innerText = "RETRY";
+                btn.disabled = false;
             }
         }
     </script>
-   
 </body>
 </html>
