@@ -63,7 +63,11 @@
                 INITIATE ANALYSIS
             </button>
         </div>
-
+        <!-- IDENTITY INPUT -->
+            <div class="flex flex-col space-y-2">
+                <label class="text-xs text-gray-500 tracking-widest">[ IDENTITY_PROTOCOL ]</label>
+                <input id="userIdentity" type="text" class="w-full bg-black/50 border border-gray-700 text-white p-3 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Who are you in the chat? (e.g. 'Me', 'Blue')">
+            </div>
         <!-- STEP 3: OUTPUT -->
         <div id="step3" class="hidden space-y-4">
             <div class="glass p-6 border-l-4 border-l-green-500">
@@ -90,6 +94,7 @@
 
         async function runAnalysis() {
             const input = document.getElementById('userInput').value;
+            const identity = document.getElementById('userIdentity').value || "Me"; // Default to "Me"
             const btn = document.getElementById('analyzeBtn');
             const resultDiv = document.getElementById('results');
             
@@ -98,37 +103,23 @@
             btn.innerText = "PROCESSING...";
             btn.disabled = true;
 
-            const prompt = `
-            You are 'The Handler', a Machiavellian social strategist.
-            My Archetype is: ${currentArchetype}.
-            Analyze this text/situation: "${input}"
-            
-            Output format (Strict text only, no markdown symbols):
-            
-            POWER: [Who is winning %]
-            INTENT: [What they actually mean]
-            
-            STRATEGIC REPLY (In ${currentArchetype} style):
-            "[Write the perfect reply here]"
-            `;
-
             try {
-                // Call our own Vercel Backend
+                // We send RAW data to the backend. The Backend builds the prompt.
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
+                    body: JSON.stringify({ 
+                        text: input,
+                        identity: identity,
+                        archetype: currentArchetype
+                    })
                 });
 
                 const json = await response.json();
                 
-                // Error Handling
                 if (json.error) throw new Error(json.error.message || json.error);
-                
-                // Validation: Ensure we actually got a result back
-                if (!json.result) throw new Error("AI returned empty data. The model might be cold. Please click retry.");
+                if (!json.result) throw new Error("AI returned empty data. The model might be cold.");
 
-                // The backend now returns { result: "..." } so we extract it here
                 const text = json.result;
                 
                 document.getElementById('step2').style.display = 'none';
@@ -145,7 +136,7 @@
                 btn.innerText = "RETRY";
                 btn.disabled = false;
             }
-        }
+        } 
     </script>
 </body>
 </html>
