@@ -25,7 +25,7 @@ export default async function handler(req) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "llama3-70b-8192", // S-Tier Intelligence, Instant Speed
+model: "llama-3.3-70b-versatile", // The New Flagship                
                 messages: [
                     { role: "user", content: prompt }
                 ],
