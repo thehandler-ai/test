@@ -122,20 +122,12 @@
                 if (json.error) throw new Error(json.error.message || json.error);
                 if (!json.candidates) throw new Error("AI returned no data. Try again.");
 
-                const text = json.candidates[0].content.parts[0].text;
+                const json = await response.json();
                 
-                document.getElementById('step2').classList.add('hidden');
-                document.getElementById('step3').classList.remove('hidden');
-                resultDiv.innerText = text;
+                if (json.error) throw new Error(json.error.message || json.error);
                 
-                btn.innerText = "INITIATE ANALYSIS";
-                btn.disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                alert("SYSTEM FAILURE: " + error.message);
-                btn.innerText = "RETRY";
-                btn.disabled = false;
+                // The backend now returns { result: "..." }
+                const text = json.result;
             }
         }
     </script>
