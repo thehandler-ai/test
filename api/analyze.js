@@ -9,29 +9,40 @@ export default async function handler(req) {
 
     try {
         const { prompt } = await req.json();
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = process.env.BYTEZ_API_KEY;
 
         if (!apiKey) {
-            return new Response(JSON.stringify({ error: "Server Configuration Error: Key Missing" }), { status: 500 });
+            return new Response(JSON.stringify({ error: "Server Error: Bytez Key Missing" }), { status: 500 });
         }
 
-        // The specific model URL
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+        // We use a high-performance open model. 
+        // Qwen 2.5 7B Instruct is excellent for logic and follows instructions well.
+        const modelId = "Qwen/Qwen2.5-7B-Instruct";
 
-        const data = {
-            contents: [{
-                parts: [{ text: prompt }]
-            }]
-        };
-
-        const googleResponse = await fetch(url, {
+        const response = await fetch(`https://api.bytez.com/model/${modelId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                text: prompt,
+                params: {
+                    max_new_tokens: 600, // Enough for a detailed analysis
+                    temperature: 0.7
+                }
+            })
         });
 
-        const json = await googleResponse.json();
-        return new Response(JSON.stringify(json), {
+        const json = await response.json();
+
+        // Bytez returns { output: "The text..." }
+        // We normalize it here so the frontend is happy
+        if (!json.output) {
+             throw new Error(JSON.stringify(json));
+        }
+
+        return new Response(JSON.stringify({ result: json.output }), {
             headers: { 'Content-Type': 'application/json' }
         });
 
