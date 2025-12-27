@@ -3,140 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE HANDLER // V1.2</title>
+    <title>THE HANDLER // V2.0 [BLACK SITE]</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'JetBrains Mono', monospace; background-color: #050505; color: #00FF94; }
-        .glass { background: rgba(0, 20, 0, 0.6); backdrop-filter: blur(10px); border: 1px solid #00FF94; }
-        .scanline {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 148, 0.02) 50%);
-            background-size: 100% 4px; pointer-events: none; z-index: 50;
-        }
-        ::placeholder { color: #005533; }
+        body { font-family: 'JetBrains+Mono', monospace; background-color: #050505; color: #00FF94; }
+        .glass { background: rgba(10, 25, 10, 0.5); backdrop-filter: blur(8px); border: 1px solid #00FF94; }
+        .scanline { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 148, 0.02) 50%); background-size: 100% 4px; pointer-events: none; z-index: 50; }
         .hidden { display: none; }
+        input, textarea, select { background-color: #0a0a0a; border: 1px solid #224422; color: white; padding: 8px; font-size: 14px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-x-hidden">
-    
+<body class="min-h-screen p-4 md:p-8">
     <div class="scanline"></div>
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tighter text-center mb-2 drop-shadow-[0_0_10px_rgba(0,255,148,0.8)]">THE HANDLER</h1>
+    <p class="text-xs text-gray-500 text-center mb-8 tracking-[0.3em]">INTEL_OPERATIONS_SUITE // V2.0</p>
 
-    <header class="mb-8 text-center z-10">
-        <h1 class="text-5xl font-bold tracking-tighter drop-shadow-[0_0_10px_rgba(0,255,148,0.8)]">THE HANDLER</h1>
-        <p class="text-xs tracking-[0.5em] text-gray-500 mt-2">SOCIAL_STRATEGY_ENGINE // V1.2</p>
-    </header>
+    <div class="flex justify-center space-x-4 mb-8">
+        <button id="nav-profiler" onclick="showView('profiler')" class="px-4 py-2 text-sm uppercase tracking-widest border-b-2 border-green-500">PROFILER</button>
+        <button id="nav-handler" onclick="showView('handler')" class="px-4 py-2 text-sm uppercase tracking-widest border-b-2 border-transparent hover:border-green-500/50">HANDLER</button>
+    </div>
 
-    <main class="w-full max-w-2xl z-10 space-y-6">
-
-        <!-- STEP 1: SELECTOR -->
-        <div id="step1" class="space-y-4">
-            <p class="text-sm text-gray-400 border-b border-gray-800 pb-2">[ SELECT_OPERATOR_MODE ]</p>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="selectArchetype('Ghost')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
-                    <div class="text-2xl mb-2">👻</div>
-                    <div class="font-bold group-hover:text-white">THE GHOST</div>
-                </button>
-                <button onclick="selectArchetype('Siren')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
-                    <div class="text-2xl mb-2">🥺</div>
-                    <div class="font-bold group-hover:text-white">THE SIREN</div>
-                </button>
-                <button onclick="selectArchetype('Sovereign')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
-                    <div class="text-2xl mb-2">♟️</div>
-                    <div class="font-bold group-hover:text-white">THE SOVEREIGN</div>
-                </button>
-                <button onclick="selectArchetype('Yapper')" class="glass p-4 hover:bg-green-900/30 transition text-left group">
-                    <div class="text-2xl mb-2">🗣️</div>
-                    <div class="font-bold group-hover:text-white">THE YAPPER</div>
-                </button>
-            </div>
+    <!-- PROFILER VIEW -->
+    <div id="profiler" class="w-full max-w-4xl mx-auto space-y-4">
+        <h2 class="text-lg tracking-widest">[ :: TARGET DOSSIER :: ]</h2>
+        <div class="glass p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input id="p-name" placeholder="Name/Alias (e.g., Rin)">
+            <input id="p-username" placeholder="Username (e.g., midnight_6140)">
+            <input id="p-age" type="number" placeholder="Age">
+            <input id="p-sex" placeholder="Sex (Male/Female)">
+            <textarea id="p-bio" class="md:col-span-2 h-20" placeholder="Bio / Public Intro..."></textarea>
+            <textarea id="p-consumption" class="md:col-span-2 h-20" placeholder="Music/Media Consumption..."></textarea>
+            <textarea id="p-leverage" class="md:col-span-2 h-20" placeholder="Known Leverage Points / Triggers..."></textarea>
+            <input id="p-archetype" class="md:col-span-2" placeholder="Assigned Archetype (e.g., The Wounded Healer)">
         </div>
+        <button onclick="createProfile()" id="profileBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold py-3 uppercase tracking-widest transition">COMPILE DOSSIER</button>
+    </div>
 
-        <!-- STEP 2: INPUT -->
-        <div id="step2" class="hidden space-y-4 glass p-6">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                <p class="text-sm text-gray-400">[ UPLOAD_DATA ]</p>
-                <span id="selectedMode" class="text-xs bg-green-900 text-green-100 px-2 py-1 rounded">MODE: NULL</span>
+    <!-- HANDLER VIEW -->
+    <div id="handler" class="hidden w-full max-w-4xl mx-auto space-y-4">
+         <h2 class="text-lg tracking-widest">[ :: LIVE ANALYSIS :: ]</h2>
+         <div class="glass p-6 space-y-4">
+            <div>
+                <label class="text-xs text-gray-400">SELECT TARGET</label>
+                <select id="targetSelector" class="w-full mt-1"></select>
             </div>
-            <textarea id="userInput" class="w-full bg-black/50 border border-gray-700 text-white p-4 h-32 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Paste the text message or describe the situation..."></textarea>
-            <button onclick="runAnalysis()" id="analyzeBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold py-3 uppercase tracking-widest transition">
-                INITIATE ANALYSIS
-            </button>
-        </div>
-        <!-- IDENTITY INPUT -->
-            <div class="flex flex-col space-y-2">
-                <label class="text-xs text-gray-500 tracking-widest">[ IDENTITY_PROTOCOL ]</label>
-                <input id="userIdentity" type="text" class="w-full bg-black/50 border border-gray-700 text-white p-3 focus:outline-none focus:border-green-500 font-mono text-sm" placeholder="Who are you in the chat? (e.g. 'Me', 'Blue')">
+             <div>
+                <label class="text-xs text-gray-400">SELECT YOUR ARCHETYPE</label>
+                 <select id="archetypeSelector" class="w-full mt-1">
+                    <option value="Sovereign">Sovereign</option>
+                    <option value="Ghost">Ghost</option>
+                    <option value="Siren">Siren</option>
+                </select>
             </div>
-        <!-- STEP 3: OUTPUT -->
-        <div id="step3" class="hidden space-y-4">
-            <div class="glass p-6 border-l-4 border-l-green-500">
-                <h3 class="text-xl font-bold mb-4 border-b border-gray-800 pb-2">:: ANALYSIS REPORT ::</h3>
-                <div id="results" class="space-y-4 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap"></div>
-            </div>
-            <button onclick="location.reload()" class="text-xs text-gray-500 hover:text-white underline">[ RESET_SYSTEM ]</button>
-        </div>
-
-    </main>
+            <textarea id="handlerInput" class="w-full h-24" placeholder="Paste text message or situation..."></textarea>
+            <button onclick="runHandler()" id="handlerBtn" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold py-3 uppercase tracking-widest transition">EXECUTE</button>
+            <div id="handlerOutput" class="mt-4 text-sm whitespace-pre-wrap border-t border-gray-800 pt-4"></div>
+         </div>
+    </div>
 
     <script>
-        let currentArchetype = "";
+        let targets = [];
 
-        function selectArchetype(type) {
-            console.log("Archetype Selected:", type);
-            currentArchetype = type;
-            document.getElementById('selectedMode').innerText = "MODE: " + type.toUpperCase();
-            // Using style display to ensure compatibility
-            document.getElementById('step1').style.display = 'none';
-            document.getElementById('step2').style.display = 'block';
-            document.getElementById('step2').classList.remove('hidden');
+        function showView(view) {
+            document.getElementById('profiler').style.display = view === 'profiler' ? 'block' : 'none';
+            document.getElementById('handler').style.display = view === 'handler' ? 'block' : 'none';
+            document.getElementById('nav-profiler').classList.toggle('border-green-500', view === 'profiler');
+            document.getElementById('nav-handler').classList.toggle('border-green-500', view === 'handler');
+            if (view === 'handler') loadTargets();
         }
 
-        async function runAnalysis() {
-            const input = document.getElementById('userInput').value;
-            const identity = document.getElementById('userIdentity').value || "Me"; // Default to "Me"
-            const btn = document.getElementById('analyzeBtn');
-            const resultDiv = document.getElementById('results');
-            
-            if (!input) return alert("NO DATA DETECTED.");
+        async function createProfile() {
+            const btn = document.getElementById('profileBtn');
+            btn.innerText = "COMPILING..."; btn.disabled = true;
 
-            btn.innerText = "PROCESSING...";
-            btn.disabled = true;
+            const profileData = {
+                name: document.getElementById('p-name').value,
+                username: document.getElementById('p-username').value,
+                age: parseInt(document.getElementById('p-age').value) || null,
+                sex: document.getElementById('p-sex').value,
+                bio_raw: document.getElementById('p-bio').value,
+                consumption_data: { content: document.getElementById('p-consumption').value },
+                leverage_points: document.getElementById('p-leverage').value,
+                archetype: document.getElementById('p-archetype').value,
+            };
+
+            if (!profileData.name) {
+                alert("Name is required.");
+                btn.innerText = "COMPILE DOSSIER"; btn.disabled = false;
+                return;
+            }
 
             try {
-                // We send RAW data to the backend. The Backend builds the prompt.
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'create_profile', data: profileData })
+                });
+                const json = await response.json();
+                if (json.error) throw new Error(json.error);
+                alert(`DOSSIER CREATED: ${json.newProfile[0].name}`);
+                document.getElementById('profiler').querySelectorAll('input, textarea').forEach(el => el.value = '');
+            } catch (error) {
+                alert("VAULT ERROR: " + error.message);
+            } finally {
+                btn.innerText = "COMPILE DOSSIER"; btn.disabled = false;
+            }
+        }
+
+        async function loadTargets() {
+            const selector = document.getElementById('targetSelector');
+            selector.innerHTML = '<option>Loading targets...</option>';
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'load_targets' })
+                });
+                const { targets: loadedTargets, error } = await response.json();
+                if (error) throw new Error(error);
+                targets = loadedTargets;
+                selector.innerHTML = targets.map(t => `<option value="${t.id}">${t.name} (${t.archetype || 'N/A'})</option>`).join('');
+            } catch (error) {
+                alert("FAILED TO LOAD TARGETS FROM VAULT: " + error.message);
+            }
+        }
+        
+        async function runHandler() {
+            const btn = document.getElementById('handlerBtn');
+            const outputDiv = document.getElementById('handlerOutput');
+            
+            const selectedId = document.getElementById('targetSelector').value;
+            const input = document.getElementById('handlerInput').value;
+            const archetype = document.getElementById('archetypeSelector').value;
+
+            if (!selectedId || !input) return alert("TARGET AND INPUT REQUIRED.");
+
+            btn.innerText = "PROCESSING..."; btn.disabled = true;
+            outputDiv.innerText = "";
+
+            try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        text: input,
-                        identity: identity,
-                        archetype: currentArchetype
+                        mode: "handle",
+                        data: {
+                            targetId: selectedId,
+                            identity: "Zia",
+                            userArchetype: archetype,
+                            input: input,
+                        }
                     })
                 });
 
                 const json = await response.json();
-                
-                if (json.error) throw new Error(json.error.message || json.error);
-                if (!json.result) throw new Error("AI returned empty data. The model might be cold.");
-
-                const text = json.result;
-                
-                document.getElementById('step2').style.display = 'none';
-                document.getElementById('step3').style.display = 'block';
-                document.getElementById('step3').classList.remove('hidden');
-                resultDiv.innerText = text;
-                
-                btn.innerText = "INITIATE ANALYSIS";
-                btn.disabled = false;
-
+                if (json.error) throw new Error(json.error);
+                if (!json.result) throw new Error("AI returned empty data.");
+                outputDiv.innerText = json.result;
             } catch (error) {
-                console.error(error);
-                alert("SYSTEM FAILURE: " + error.message);
-                btn.innerText = "RETRY";
+                outputDiv.innerText = "SYSTEM FAILURE:\n" + error.message;
+            } finally {
+                btn.innerText = "EXECUTE";
                 btn.disabled = false;
             }
-        } 
+        }
+        
+        showView('profiler');
     </script>
 </body>
 </html>
