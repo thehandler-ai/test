@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 export const config = {
     runtime: 'edge',
 };
@@ -7,78 +9,85 @@ export default async function handler(req) {
         return new Response('Method Not Allowed', { status: 405 });
     }
 
+    // Initialize Supabase connection inside the handler
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
     try {
-        // Receive the raw data from Frontend
-        const { text, identity, archetype } = await req.json();
-        const apiKey = process.env.GROQ_API_KEY;
+        const { mode, data } = await req.json();
 
-        if (!apiKey) {
-            return new Response(JSON.stringify({ error: "Server Error: API Key Missing" }), { status: 500 });
+        // --- MODE A: LOAD ALL TARGETS ---
+        if (mode === "load_targets") {
+            const { data: targets, error } = await supabase.from('targets').select('id, name, archetype').order('created_at', { ascending: false });
+            if (error) throw error;
+            return new Response(JSON.stringify({ targets }), { headers: { 'Content-Type': 'application/json' } });
         }
 
-        // --- THE SECRET SAUCE (System Prompt) ---
-        // This is where you define the AI's personality.
-        // It is hidden from the user.
-        const systemPrompt = `
-        You are 'The Handler', a strategic social advisor.
-        
-        CONTEXT:
-        - The User is identified as: "${identity}"
-        - The User's chosen Archetype is: "${archetype}"
-        - The User is asking for help with this text/situation:
-        "${text}"
-
-        GOAL:
-        1. Analyze the power dynamics.
-        2. Draft 3 specific text messages that "${identity}" should send next. 
-        CRITICAL: You must write these messages AS "${identity}". Do NOT write what the other person should say. Even if "${identity}" sent the last message, draft a follow-up or a double-text strategy.
-
-        ARCHETYPE GUIDELINES:
-        - Ghost: Stoic, short, aloof, lower case.
-        - Siren: Sweet, manipulative, victim-playing, emojis.
-        - Sovereign: Cold, direct, dominant, absolute.
-        - Yapper: Chaotic, high energy, enthusiastic.
-
-        OUTPUT FORMAT (Strict, no markdown bolding):
-        POWER: [Score 0-100% for ${identity}]
-        INTENT: [What the other person actually means / The hidden subtext of the situation]
-        
-        REPLY OPTIONS (Drafted for ${identity} to send):
-        1. [Option A]
-        2. [Option B]
-        3. [Option C]
-        `;
-
-        const url = 'https://api.groq.com/openai/v1/chat/completions';
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." }, // Groq sometimes needs a system msg
-                    { role: "user", content: systemPrompt }
-                ],
-                temperature: 0.7,
-                max_tokens: 800
-            })
-        });
-
-        const json = await response.json();
-
-        if (json.error) {
-             throw new Error(json.error.message);
+        // --- MODE B: CREATE A NEW PROFILE ---
+        if (mode === "create_profile") {
+            const { data: newProfile, error } = await supabase.from('targets').insert([data]).select();
+            if (error) throw error;
+            return new Response(JSON.stringify({ newProfile }), { headers: { 'Content-Type': 'application/json' } });
         }
 
-        const resultText = json.choices[0].message.content;
+        // --- MODE C: RUN THE HANDLER ANALYSIS ---
+        if (mode === "handle") {
+            const { targetId, identity, userArchetype, input } = data;
+            
+            // 1. Fetch the full target profile from the Vault
+            const { data: targetProfile, error: profileError } = await supabase
+                .from('targets')
+                .select('*')
+                .eq('id', targetId)
+                .single();
 
-        return new Response(JSON.stringify({ result: resultText }), {
-            headers: { 'Content-Type': 'application/json' }
-        });
+            if (profileError) throw profileError;
+
+            // 2. Prepare the prompt for the AI
+            const apiKey = process.env.GROQ_API_KEY;
+            const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+            const systemPrompt = `
+                You are 'The Handler', a master social strategist.
+                
+                CONTEXT:
+                - The User is: "${identity}"
+                - The User's chosen Archetype for this reply is: "${userArchetype}"
+                - The Target's Profile is: ${JSON.stringify(targetProfile)}
+                - The current situation/text to analyze is: "${input}"
+
+                YOUR TASK:
+                Analyze the situation based on the Target's known profile. Provide a Power score, a concise Intent analysis, and 3 distinct Reply Options for the User to send. The replies must match the User's chosen Archetype.
+
+                OUTPUT FORMAT (Strict text, no markdown):
+                POWER: [Score % for ${identity}]
+                INTENT: [Hidden meaning based on Target's profile]
+                
+                REPLY OPTIONS:
+                1. [Option A]
+                2. [Option B]
+                3. [Option C]
+            `;
+
+            // 3. Call the AI
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [{ role: "user", content: systemPrompt }],
+                    temperature: 0.7,
+                    max_tokens: 1024,
+                })
+            });
+
+            const json = await response.json();
+            if (json.error) throw new Error(json.error.message);
+            
+            const resultText = json.choices[0].message.content;
+            return new Response(JSON.stringify({ result: resultText }), { headers: { 'Content-Type': 'application/json' } });
+        }
+
+        return new Response('Invalid mode specified', { status: 400 });
 
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
